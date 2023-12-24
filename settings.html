@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    
+    <style>
+    * {
+    font-family: 'Arial';
+    }
+    
+    .leftMargin {
+    margin-left:20px;
+    }
+    
+    p {
+    display:block;
+    margin-block-start: 10px;
+    margin-block-end: 10px;
+    }
+    
+    body {
+    -webkit-user-select: none;
+    user-select: none;
+    }
+    
+    #speechDocInput {
+    min-width:300px;
+    }
+    
+    #highlightColor {
+    margin-top:10px;
+    }
+    
+    #labelForNormalText {
+    margin-left:20px;
+    }
+    
+    #saveButton {
+    float:right;
+    margin-right: 10px;
+    min-width: 70px;
+    min-height: 30px;
+    cursor: pointer;
+    font-weight: bold;
+    }
+    
+    #resetButton {
+    float:right;
+    margin-right: 10px;
+    min-width: 70px;
+    min-height: 30px;
+    cursor: pointer;
+    }
+    
+    .shrinkSize {
+    max-width:50px;
+    }
+    
+    p, label {
+    font-size: 15px;
+    }
+    
+    .button8{
+    display:inline-block;
+    padding:0.2em 1.45em;
+    margin:0.1em;
+    border:0.15em solid #CCCCCC;
+    box-sizing: border-box;
+    text-decoration:none;
+    font-family:'Segoe UI','Roboto',sans-serif;
+    font-weight:400;
+    color:#000000;
+    background-color:#CCCCCC;
+    text-align:center;
+    position:relative;
+    }
+    .button8:hover{
+    border-color:#7a7a7a;
+    }
+    .button8:active{
+    background-color:#999999;
+    }
+    @media all and (max-width:30em){
+    .button8{
+    display:block;
+    margin:0.2em auto;
+    }
+    }
+    
+    #saving {
+    float:left;
+    display:none;
+    color:red;
+    }
+    
+    </style>
+    
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+    
+  </head>
+  <body>
+    <h3>General</h3>
+    <label for="speechDocInput">Speech Doc URL:</label>
+    <input type="text" id="speechDocInput" name="speechDocInput">
+    <br>
+    <datalist id="colorList">
+    <option value="#00ff00">
+    <option value="#00ffff">
+    <option value="#ffff00">
+    <option value="#ff9900">
+    <option value="#ff00ff">
+    </datalist>
+    <label for="highlightColor">Default Highlight Color:</label>
+    <input type="color" id="highlightColor" name="highlightColor" list="colorList">
+    <br>
+    
+    <h3>Shrink</h3>
+    <label for="shrinkSize">Shrink to size:</label>
+    <input type="number" id="shrinkSize" name="shrinkSize" class="shrinkSize">
+    <br>
+    <p>Shrink text that isn't:</p>
+    <input type="radio" id="bold" name="shrink" class="leftMargin">
+    <label for="bold">Bolded</label>
+    <input type="radio" id="underline" name="shrink">
+    <label for="underline">Underlined</label>
+    <input type="radio" id="highlight" name="shrink">
+    <label for="highlight">Highlighted</label>
+    <br>
+    
+    
+    <h3>Cardify</h3>
+    <i><p>Formatting to apply:</p></i>
+    <p>Underlined Text:</p>
+    <input type="checkbox" id="boldText" class="leftMargin">
+    <label for="boldText">Bold</label>
+    <input type="checkbox" id="highlightText" class="leftMargin">
+    <label for="highlightText">Highlight</label>
+    <br>
+    <p>Bold Text:</p>
+    <input type="checkbox" id="underlineText" class="leftMargin">
+    <label for="underlineText">Underline</label>
+    <input type="checkbox" id="highlightText2" class="leftMargin">
+    <label for="highlightText2">Highlight</label>
+    <br>
+    <p>Normal Text:</p>
+    <label id="labelForNormalText" for="normalText">Size to shrink to:</label>
+    <input type="number" id="normalText" class="shrinkSize">
+    <br>
+    
+    
+    <br>
+    <br>
+    <br>
+    
+    <p id="saving">Saving...</p>
+    <button onclick="saveSettings()" class="button8" id="saveButton">SAVE</button>
+    <button onclick="resetSettings()" class="button8" id="resetButton">RESET</button>
+    
+  </body>
+  
+  <script>
+      
+   
+   google.script.run.withSuccessHandler(loadSettings).getSettings();
+   
+   //loads in your previously saved settings
+   function loadSettings(allSettings) {
+     
+     document.getElementById("speechDocInput").value = allSettings[0];
+     document.getElementById("highlightColor").value = allSettings[1];
+     document.getElementById("shrinkSize").value = allSettings[2];
+     
+     if(allSettings[3] == "bold") {
+       document.getElementById("bold").checked = true;
+     } else if (allSettings[3] == "underline") {
+       document.getElementById("underline").checked = true;
+     } else if (allSettings[3] == "highlight") {
+       document.getElementById("highlight").checked = true;
+     }
+     
+     if(allSettings[4]) {
+       document.getElementById("boldText").checked = true;
+     }
+     if(allSettings[5]) {
+       document.getElementById("highlightText").checked = true;
+     }
+     if(allSettings[6]) {
+       document.getElementById("underlineText").checked = true;
+     }
+     if(allSettings[7]) {
+       document.getElementById("highlightText2").checked = true;
+     }
+     
+      document.getElementById("normalText").value = allSettings[8];
+     
+   }
+   
+   //saves all input into the settings page
+   function saveSettings() {
+
+    var speechURL = document.getElementById("speechDocInput").value;
+
+    var highlightColor = document.getElementById("highlightColor").value;
+
+    var shrinkSize = document.getElementById("shrinkSize").value;
+    
+
+    var shrinkIgnore;
+
+    if (document.getElementById('bold').checked) {
+      shrinkIgnore = "bold";
+    } else if (document.getElementById('underline').checked) {
+      shrinkIgnore = "underline";
+    } else if (document.getElementById('highlight').checked) {
+      shrinkIgnore = "highlight";
+    }
+    
+
+    var underlineToBold;
+    var underlineToHighlight;
+    var boldToUnderline;
+    var boldToHighlight;
+
+    if (document.getElementById('boldText').checked) {
+      underlineToBold = "t";
+    }
+    if (document.getElementById('highlightText').checked) {
+      underlineToHighlight = "t";
+    }
+    if (document.getElementById('underlineText').checked) {
+      boldToUnderline = "t";
+    }
+    if (document.getElementById('highlightText2').checked) {
+      boldToHighlight = "t";
+    }
+
+    var cardifyShrinkSize = document.getElementById('normalText').value;
+    
+
+    var allSettings = [
+      speechURL,
+      highlightColor,
+      shrinkSize,
+      shrinkIgnore,
+      underlineToBold,
+      underlineToHighlight,
+      boldToUnderline,
+      boldToHighlight,
+      cardifyShrinkSize
+    ];
+
+    var savingLoader = document.getElementById("saving");
+    savingLoader.style.display = "block";
+    google.script.run.withFailureHandler(close).withSuccessHandler(close).pushSettings(allSettings);
+   }
+   
+   
+   
+   function resetSettings() {
+     
+     document.getElementById("speechDocInput").value = "";
+     document.getElementById("highlightColor").value = "#ffff00";
+     document.getElementById("shrinkSize").value = 8;
+     
+     document.getElementById("underline").checked = true;
+     
+     document.getElementById("boldText").checked = true;
+     
+     document.getElementById("highlightText").checked = false;
+     
+     document.getElementById("underlineText").checked = true;
+     
+     document.getElementById("highlightText2").checked = true;
+     
+     document.getElementById("normalText").value = 8;
+     
+     saveSettings();
+     
+   }
+   
+   function close() {
+     google.script.host.close();
+     var savingLoader = document.getElementById("saving");
+     savingLoader.style.display = "none";
+   }
+   
+
+  </script>
+</html>
