@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    
+    <style>
+    .loader {
+    border: 6px solid #f3f3f3; /* Light grey */
+    border-top: 6px solid #000000; /* Blue */
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1.5s linear infinite;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top:105px;
+    }
+    
+    @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+    }
+    
+    .scrollBox {
+    overflow: auto;
+    height: 220px; 
+    width: 242px; 
+    border-style: solid;
+    white-space: nowrap; /* this allows horizontal scrolling for the input boxes */
+    float: right;
+    margin-right: 9px;
+    margin-top:10px
+    }
+    
+    .separator {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    }
+    .separator::before, .separator::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #000;
+    }
+    
+    .separator::before {
+    margin-right: .25em;
+    }
+    .separator::after {
+    margin-left: .25em;
+    }
+    
+    .action {
+    margin: 4px 0;
+    text-align: center;
+    text-align: center;
+    display: inline-block;
+    cursor: pointer;
+    }
+    
+    .flex {
+    justify-content: center;
+    display: flex;
+    }
+    
+    .action {
+    text-align: center;
+    margin: 5px;
+    }
+    
+    .divider{
+    width:5px;
+    height:auto;
+    display:inline-block;
+    }
+    
+    #table_of_contents {
+    float: left;
+    display:inline-block;
+    min-width: 17px;
+    min-height: 17px;
+    max-width: 32px;
+    margin-left: 5px;
+    font-size: 17px;
+    margin-top:11px;
+    cursor:pointer;
+    }
+    
+    #speechTOC {
+    height:auto;
+    line-height:14px;
+    font-size:14px;
+    min-width:32px;
+    max-width:32px;
+    padding-left:8px;
+    padding-right:6px;
+    margin-top:9px
+    }
+    
+    .settings {
+    border-radius:10px;
+    font-size:14px;
+    min-width:10px;
+    min-height:10px;
+    float:right;
+    background:white;
+    cursor:pointer;
+    border:none;
+    transition: all 0.25s ease;
+    margin-right:12px;
+    margin-top:-4px;
+    }
+    
+    .settings:hover {
+    background:#eee;
+    border:none;
+    transition: all 0.25s ease;
+    }
+    
+    .info {
+    border-radius:10px;
+    font-size:14px;
+    min-width:10px;
+    min-height:10px;
+    float:left;
+    background:white;
+    cursor:pointer;
+    border:none;
+    transition: all 0.25s ease;
+    margin-top:-4px;
+    }
+    .info:hover {
+    background:#eee;
+    border:none;
+    transition: all 0.25s ease;
+    }
+    
+    .title {
+    text-align:center;
+    }
+    
+    .noSelect {
+    user-select: none;
+    -webkit-user-select: none;
+    }
+    
+    </style>
+    
+    
+  </head>
+  <body>
+    
+    
+    <button id="settings" class="settings">☰</button>
+
+    <button id="info" class="info">ⓘ</button>
+    <h2 class="title">DebateX</h2>
+    
+    
+    <div class="separator">Card Functions</div>
+    
+    <div class="flex">
+    
+    <button id="shrink" class="action">Shrink</button>
+    <button id="cardify" class="action">Cardify</button>
+    <button id="extract" class="action">Extract</button>
+    
+    
+    
+    </div>
+
+    <div class="flex">
+    
+    <button id="condense" class="action">Condense</button>
+
+    <button id="highlight" class="action">Highlight</button>
+
+    <button id="reformat" class="action">Reformat</button>
+
+    </div>
+    
+    <div class="separator">Heading Functions</div>
+    
+    <div class="flex">
+    
+    <button id="importStyles" class="action">Import Styles</button>
+    <button id="wikify" class="action">Wikify</button>
+    
+    </div>
+    
+    <div class="separator">Speech Doc Functions</div>
+
+    <div class="flex">
+    <button id="speech_doc" class="action">Send to Doc</button>
+    <button class="action" id="newDoc">New Doc</button>
+    <button class="action" id="openDoc">Open Doc</button>
+    </div>
+
+    
+    <!---------------- TABLE OF CONTENTS BOX ---------------->
+
+    <div class="separator">Speech from Table of Contents</div>
+
+    <div id="box" class="scrollBox"></div>
+    <button id="table_of_contents"><i class="fa fa-refresh"></i></button>
+    <button id="speechTOC" class="action">
+    <br>
+      S
+    <br>
+      E
+    <br>
+      N
+    <br>
+      D
+    <br> 
+    <br>
+    </button>
+    
+
+    <div id="loader" class="loader"></div>
+    
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    
+    <script>
+      
+      //check for footnotes on startup
+      google.script.run.getAllFootnotes();
+      
+      //hide loader on startup
+      hideLoader();
+      
+      //generate TOC on startup
+      google.script.run.withSuccessHandler(generateTOC).tableOfContents();
+      
+      function generateTOC (headings) {
+        
+        reInput = headings; //declare a global variable so we can send it back to the "speechDocByElement" function
+    
+        $('#box').empty(); //clears the scrollbox div before refreshing
+        
+        for(var i = 0; i < headings[0].length; i++) {
+        var scrollBox = document.getElementById("box");
+      
+        var id = "label" + i; //new id each time
+      
+        //creates a checkbox
+        var checkBox = document.createElement("input");
+        checkBox.type = "checkbox";
+        checkBox.id = id;
+      
+        //creates a label for the checkbox
+        var label = document.createElement("label");
+        label.htmlFor = id;
+      
+        //adding styles to label/checkbox based on heading type
+        label.style.fontWeight = "bold"; 
+        label.style.cursor = "pointer";
+        label.className = "noSelect";
+        checkBox.style.cursor = "pointer";
+        if(headings[1][i] == 1.0) {
+        label.style.fontSize = "17px";
+        checkBox.style.marginLeft = "4px";
+        } else if (headings[1][i] == 2.0) {
+        label.style.fontSize = "16px";
+        checkBox.style.marginLeft = "10px";
+        } else if (headings[1][i] == 3.0) {
+        label.style.fontSize = "16px";
+        checkBox.style.marginLeft = "14px";
+        } else if (headings[1][i] == 4.0) {
+        label.style.fontSize = "16px";
+        checkBox.style.marginLeft = "18px";
+        }
+      
+        //adds label/checkbox to sidebar, w a linebreak in between
+        scrollBox.appendChild(checkBox);
+        scrollBox.appendChild(label);
+        label.appendChild(document.createTextNode(headings[0][i])); //text inside label
+        var lineBreak = document.createElement("br");
+        scrollBox.appendChild(lineBreak);
+        }
+        
+        hideLoader();
+      }
+      
+      function uncheckAll(){ //unchecks every checkbox once the speech doc button is pressed
+        $('input[type="checkbox"]:checked').prop('checked',false);
+      }
+      
+      function showLoader() {
+        var loader = document.getElementById("loader");
+        loader.style.display = "block";
+      }
+      
+      function hideLoader() {
+        var loader = document.getElementById("loader");
+        loader.style.display = "none";
+      }
+      
+      function docOpen(url) {
+        window.open(url);
+      }
+      
+      
+      $(function(){
+      
+        $('#speech_doc').click(function() {
+          showLoader();
+          google.script.run.withSuccessHandler(hideLoader).withFailureHandler(hideLoader).speechDoc();
+          google.script.host.editor.focus();
+        });
+        
+        $('#cardify').click(function() {
+          showLoader();
+          google.script.run.withSuccessHandler(hideLoader).withFailureHandler(hideLoader).cardify();
+          google.script.host.editor.focus();
+        });
+        
+        $('#table_of_contents').click(function() {
+          showLoader();
+          google.script.host.editor.focus();
+          google.script.run.withSuccessHandler(generateTOC).withFailureHandler(hideLoader).tableOfContents();
+        });
+        
+        $('#wikify').click(function () {
+          showLoader();
+          google.script.run.withSuccessHandler(hideLoader).withFailureHandler(hideLoader).wikify();
+          google.script.host.editor.focus();
+        });
+        
+        $('#extract').click(function () {
+          showLoader();
+          google.script.run.withSuccessHandler(hideLoader).withFailureHandler(hideLoader).extract();
+          google.script.host.editor.focus();
+        });
+        
+        $('#condense').click(function () {
+          showLoader();
+          google.script.run.withSuccessHandler(hideLoader).withFailureHandler(hideLoader).condense();
+          google.script.host.editor.focus();
+        });
+        
+        $('#shrink').click(function () {
+          showLoader();
+          google.script.run.withSuccessHandler(hideLoader).withFailureHandler(hideLoader).shrink();
+          google.script.host.editor.focus();
+        });
+        
+        $('#highlight').click(function () {
+          showLoader();
+          google.script.run.withSuccessHandler(hideLoader).withFailureHandler(hideLoader).highlight();
+          google.script.host.editor.focus();
+        });
+        
+        $('#reformat').click(function () {
+          showLoader();
+          google.script.run.withSuccessHandler(hideLoader).withFailureHandler(hideLoader).reformat();
+          google.script.host.editor.focus();
+                  
+        });
+        
+        $('#speechTOC').click(function () {
+          showLoader();
+          
+          google.script.host.editor.focus();
+          
+          //some jquery that gets every checked item in the TOC
+          var idSelector = function() { return this.id; };
+          var checkedBoxes = $(":checkbox:checked").map(idSelector).get() ;
+          
+          //array of all the ID #s we want to push
+          var id = [];
+          
+          //for each (checked) checkbox, it gets the little number after the label and pushes it to another function
+          for(var i = 0; i < checkedBoxes.length; i++) {
+            id.push(checkedBoxes[i].replace('label', ''));
+          }
+          
+          //things to pass from reInput
+          var paragraphTexts = reInput[0];
+          var elementIndexes = reInput[2];
+
+          google.script.run.withSuccessHandler(hideLoader).withFailureHandler(hideLoader).speechDocByList(id, paragraphTexts, elementIndexes);
+          
+          uncheckAll();
+
+          
+        });
+        
+        $('#importStyles').click(function () {
+          showLoader();
+          google.script.run.withSuccessHandler(hideLoader).withFailureHandler(hideLoader).importHeadings();
+          google.script.host.editor.focus();
+                  
+        });
+        
+        $('#settings').click(function () {
+          google.script.run.showSettingsPage();                  
+        });
+        
+        $('#newDoc').click(function () {
+          google.script.run.withSuccessHandler(docOpen).newDocument();   
+        });
+        
+        $('#openDoc').click(function () {
+          google.script.run.withSuccessHandler(docOpen).openDocument();   
+          
+        });
+        
+        $('#info').click(function () {
+          window.open('https://sites.google.com/view/debatex/debatex');
+        });
+       
+      
+      });
+      
+    </script>
+    
+  </body>
+</html>
